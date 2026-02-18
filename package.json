@@ -1,6 +1,6 @@
 {
   "name": "landrop",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "LanDrop - 局域网文件传输工具",
   "main": "./out/main/index.js",
   "author": "LanDrop Team",
