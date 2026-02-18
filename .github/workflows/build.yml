@@ -1,37 +1,39 @@
 name: Build
 
-  on:
-    push:
-      branches: [main]
-      tags:
-        - 'v*'
-    workflow_dispatch:
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
 
-  jobs:
-    build:
-      runs-on: windows-latest
-      steps:
-        - uses: actions/checkout@v4
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
 
-        - name: Setup Node.js
-          uses: actions/setup-node@v4
-          with:
-            node-version: '20'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-        - name: Install
-          run: npm install
+      - name: Install
+        run: npm install
 
-        - name: Build
-          run: npm run build:win
-          env:
-            GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      - name: Build
+        run: npm run build:win
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
-        - name: Upload to Release
-          if: startsWith(github.ref, 'refs/tags/')
-          uses: softprops/action-gh-release@v1
-          with:
-            files: dist/LanDrop Setup 1.0.0.exe
-            tag_name: ${{ github.ref_name }}
-            body: "LanDrop 局域网文件传输工具 - 新版本发布"
-          env:
-            GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      - name: Get Version
+        id: version
+        run: echo "VERSION=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/LanDrop Setup ${{ steps.version.outputs.VERSION }}.exe
+          tag_name: v${{ steps.version.outputs.VERSION }}
+          body: "LanDrop 局域网文件传输工具 v${{ steps.version.outputs.VERSION }}"
+          overwrite: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
