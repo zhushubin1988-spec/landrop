@@ -24,6 +24,8 @@ export interface FileInfo {
   relativePath?: string
 }
 
+const TRANSFER_PORT = 5201
+
 interface AnnounceMessage {
   type: 'announce'
   deviceId: string
@@ -163,7 +165,7 @@ export class DiscoveryService extends EventEmitter {
         deviceId: this.deviceId,
         deviceName: this.deviceName,
         platform: process.platform,
-        port: this.port,
+        port: TRANSFER_PORT,
         timestamp: Date.now()
       }
 
@@ -213,7 +215,7 @@ export class DiscoveryService extends EventEmitter {
       id: data.deviceId,
       name: data.deviceName,
       ip,
-      port: data.port || 5201,
+      port: TRANSFER_PORT,
       online: true,
       type: this.getDeviceType(data.platform),
       platform: data.platform
@@ -268,7 +270,7 @@ export class DiscoveryService extends EventEmitter {
         deviceId: this.deviceId,
         deviceName: this.deviceName,
         platform: process.platform,
-        port: this.port,
+        port: TRANSFER_PORT,
         timestamp: Date.now()
       }
 
