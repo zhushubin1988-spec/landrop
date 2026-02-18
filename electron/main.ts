@@ -287,11 +287,30 @@ async function sendFilesToDevice(deviceId: string, files: { path: string; name: 
     let lastProgressTime = Date.now()
     let lastTransferred = 0
     let helloReceived = false
+    let responseBuffer = Buffer.alloc(0)
 
     socket.on('data', (data) => {
-      if (!helloReceived && data[0] === MSG_HELLO) {
-        helloReceived = true
-        sendNextFile()
+      responseBuffer = Buffer.concat([responseBuffer, data])
+      
+      // Parse response messages
+      while (responseBuffer.length >= 5) {
+        const msgType = responseBuffer[0]
+        const msgLength = responseBuffer.readUInt32BE(1)
+        
+        if (responseBuffer.length < 5 + msgLength) break
+        
+        // Only process if we haven't received hello yet
+        if (!helloReceived && msgType === MSG_HELLO) {
+          helloReceived = true
+          responseBuffer = responseBuffer.slice(5 + msgLength)
+          sendNextFile()
+        } else if (msgType === MSG_COMPLETE) {
+          // Transfer completed successfully
+          socket.end()
+        } else {
+          // Skip other messages
+          responseBuffer = responseBuffer.slice(5 + msgLength)
+        }
       }
     })
 
@@ -300,20 +319,9 @@ async function sendFilesToDevice(deviceId: string, files: { path: string; name: 
         transfer.status = 'completed'
         transfer.endTime = Date.now()
         sendMessage(socket, MSG_COMPLETE, { success: true })
-
-        // Add to history
-        transferHistory.unshift({
-          id: transferId,
-          deviceName: device.name,
-          files: files.map(f => ({ name: f.name, size: f.size })),
-          totalSize: transfer.totalSize,
-          status: 'completed',
-          timestamp: Date.now()
-        })
-
-        mainWindow?.webContents.send('transfer-complete', transfer)
-        socket.end()
-        resolve(transferId)
+        
+        // Wait for receiver's response before closing
+        // The receiver will close after sending response
         return
       }
 
@@ -386,6 +394,18 @@ async function sendFilesToDevice(deviceId: string, files: { path: string; name: 
         transfer.status = 'failed'
         mainWindow?.webContents.send('transfer-error', { id: transferId, error: 'Connection closed' })
         reject(new Error('Connection closed'))
+      } else if (transfer.status === 'completed') {
+        // Add to history
+        transferHistory.unshift({
+          id: transferId,
+          deviceName: device.name,
+          files: files.map(f => ({ name: f.name, size: f.size })),
+          totalSize: transfer.totalSize,
+          status: 'completed',
+          timestamp: Date.now()
+        })
+        mainWindow?.webContents.send('transfer-complete', transfer)
+        resolve(transferId)
       }
     })
   })
