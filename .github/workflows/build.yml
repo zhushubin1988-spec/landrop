@@ -21,11 +21,14 @@ jobs:
         
       - name: Build
         run: npm run build:win
-        env:                          # <-- 加在这里
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}  # <-- 加这行
-        
-      - name: Upload
-        uses: actions/upload-artifact@v4
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: landrop-windows
-          path: dist/
+          files: dist/LanDrop Setup 1.0.0.exe
+          tag_name: v1.0.0
+          body: "局域网文件传输工具"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
