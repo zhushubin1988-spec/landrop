@@ -12,6 +12,7 @@ let discoverySocket: dgram.Socket | null = null
 let transferServer: net.Server | null = null
 const DISCOVERY_PORT = 5200
 const TRANSFER_PORT = 5201
+let downloadDir: string = join(os.homedir(), 'Downloads', 'LanDrop')
 const devices: Map<string, any> = new Map()
 const transferHistory: any[] = []
 const activeTransfers: Map<string, any> = new Map()
@@ -182,12 +183,11 @@ function startTransferServer(): void {
               currentFile = fileInfo
 
               // Create directory if needed
-              const dir = join(os.homedir(), 'Downloads', 'LanDrop')
-              if (!fs.existsSync(dir)) {
-                fs.mkdirSync(dir, { recursive: true })
+              if (!fs.existsSync(downloadDir)) {
+                fs.mkdirSync(downloadDir, { recursive: true })
               }
 
-              const filePath = join(dir, fileInfo.name)
+              const filePath = join(downloadDir, fileInfo.name)
               fileWriteStream = fs.createWriteStream(filePath)
               console.log(`Receiving file: ${fileInfo.name} (${fileInfo.size} bytes)`)
             } catch (err) {
@@ -474,7 +474,19 @@ function setupIpcHandlers(): void {
   })
 
   ipcMain.handle('transfer:getDownloadDir', () => {
-    return join(os.homedir(), 'Downloads', 'LanDrop')
+    return downloadDir
+  })
+
+  ipcMain.handle('transfer:setDownloadDir', async () => {
+    const result = await dialog.showOpenDialog(mainWindow!, {
+      properties: ['openDirectory']
+    })
+    if (result.canceled || result.filePaths.length === 0) {
+      return { success: false }
+    }
+    downloadDir = result.filePaths[0]
+    console.log('Download directory set to:', downloadDir)
+    return { success: true, path: downloadDir }
   })
 
   ipcMain.handle('select-files', async () => {
