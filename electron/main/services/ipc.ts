@@ -123,6 +123,20 @@ export function setupIPC(
     return transferService.getDownloadDir()
   })
 
+  ipcMain.handle('transfer:setDownloadDir', async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openDirectory']
+    })
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return { success: false }
+    }
+
+    const dir = result.filePaths[0]
+    transferService.setDownloadDir(dir)
+    return { success: true, path: dir }
+  })
+
   // Transfer event handlers
   transferService.onProgress((progress: TransferProgress) => {
     if (mainWindow && !mainWindow.isDestroyed()) {

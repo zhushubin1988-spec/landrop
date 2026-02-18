@@ -6,8 +6,10 @@ interface TransferPanelProps {
   isTransferring: boolean
   progress: number
   speed: number
+  downloadDir: string
   onSend: () => void
   onCancel: () => void
+  onSelectDownloadDir: () => void
 }
 
 function formatSize(bytes: number): string {
@@ -23,8 +25,10 @@ function TransferPanel({
   isTransferring,
   progress,
   speed,
+  downloadDir,
   onSend,
-  onCancel
+  onCancel,
+  onSelectDownloadDir
 }: TransferPanelProps): JSX.Element {
   const totalSize = files.reduce((acc, file) => acc + file.size, 0)
   const canSend = selectedDevice && files.length > 0 && !isTransferring
@@ -103,6 +107,34 @@ function TransferPanel({
           </div>
         </div>
       )}
+
+      <div style={{ marginBottom: '16px' }}>
+        <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '8px' }}>
+          接收文件夹
+        </div>
+        <div
+          style={{
+            padding: '12px',
+            background: 'rgba(0, 0, 0, 0.03)',
+            borderRadius: '8px',
+            fontSize: '14px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}
+        >
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+            {downloadDir || '默认: Downloads/LanDrop'}
+          </span>
+          <button
+            className="btn btn-secondary"
+            style={{ marginLeft: '8px', padding: '4px 8px', fontSize: '12px' }}
+            onClick={onSelectDownloadDir}
+          >
+            选择
+          </button>
+        </div>
+      </div>
 
       <div style={{ display: 'flex', gap: '12px' }}>
         {isTransferring ? (

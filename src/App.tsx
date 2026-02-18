@@ -48,6 +48,7 @@ function App(): JSX.Element {
   const [transferProgress, setTransferProgress] = useState(0)
   const [transferSpeed, setTransferSpeed] = useState(0)
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null)
+  const [downloadDir, setDownloadDir] = useState<string>('')
 
   // Load devices
   const loadDevices = useCallback(async () => {
@@ -140,7 +141,24 @@ function App(): JSX.Element {
   // Initial load
   useEffect(() => {
     loadDevices()
+    // Load download directory
+    if (window.api.getDownloadDir) {
+      window.api.getDownloadDir().then(setDownloadDir)
+    }
   }, [loadDevices])
+
+  const handleSelectDownloadDir = async (): Promise<void> => {
+    try {
+      if (window.api.setDownloadDir) {
+        const result = await window.api.setDownloadDir()
+        if (result.success && result.path) {
+          setDownloadDir(result.path)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to select download directory:', error)
+    }
+  }
 
   const handleSelectFiles = async (): Promise<void> => {
     try {
@@ -315,8 +333,10 @@ function App(): JSX.Element {
           isTransferring={isTransferring}
           progress={transferProgress}
           speed={transferSpeed}
+          downloadDir={downloadDir}
           onSend={handleSend}
           onCancel={handleCancel}
+          onSelectDownloadDir={handleSelectDownloadDir}
         />
       </div>
     </div>

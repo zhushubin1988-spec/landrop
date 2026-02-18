@@ -360,15 +360,21 @@ export class TransferService {
       // Send end marker
       const endMarker = Buffer.alloc(4)
       endMarker.writeUInt32BE(0, 0)
-      socket.write(endMarker)
 
-      if (this.currentTask) {
-        this.currentTask.status = 'completed'
-        if (this.onCompleteCallback) {
-          this.onCompleteCallback(this.currentTask)
-        }
-      }
-      return
+      return new Promise((resolve) => {
+        socket.write(endMarker, () => {
+          // Wait for socket to finish
+          socket.once('close', () => {
+            if (this.currentTask) {
+              this.currentTask.status = 'completed'
+              if (this.onCompleteCallback) {
+                this.onCompleteCallback(this.currentTask)
+              }
+            }
+            resolve()
+          })
+        })
+      })
     }
 
     const file = files[fileIndex]
@@ -386,7 +392,7 @@ export class TransferService {
         if (read === 0) {
           await fileHandle.close()
           // Send next file
-          this.sendNextFile(socket, files, fileIndex + 1)
+          await this.sendNextFile(socket, files, fileIndex + 1)
           return
         }
 
@@ -442,5 +448,12 @@ export class TransferService {
 
   getDownloadDir(): string {
     return this.downloadDir
+  }
+
+  setDownloadDir(dir: string): void {
+    if (fs.existsSync(dir)) {
+      this.downloadDir = dir
+      console.log(`Download directory set to: ${dir}`)
+    }
   }
 }

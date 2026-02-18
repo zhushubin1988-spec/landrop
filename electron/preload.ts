@@ -54,9 +54,18 @@ const api = {
   // File transfer
   sendFiles: (deviceId: string, files: FileInfo[]): Promise<string> =>
     ipcRenderer.invoke('send-files', deviceId, files),
+  getDownloadDir: (): Promise<string> => ipcRenderer.invoke('transfer:getDownloadDir'),
+  setDownloadDir: (): Promise<{ success: boolean; path?: string }> =>
+    ipcRenderer.invoke('transfer:setDownloadDir'),
 
   // File selection
   selectFiles: (): Promise<string[]> => ipcRenderer.invoke('select-files'),
+
+  // Dialog
+  dialog: {
+    openFile: (): Promise<FileInfo[]> => ipcRenderer.invoke('dialog:openFile'),
+    openFolder: (): Promise<FileInfo[]> => ipcRenderer.invoke('dialog:openFolder')
+  },
 
   // Transfer history
   getTransferHistory: (): Promise<TransferHistory[]> => ipcRenderer.invoke('get-transfer-history'),
