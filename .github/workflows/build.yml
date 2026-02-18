@@ -24,7 +24,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
-             - name: Get Version
+        - name: Get Version
           id: version
           run: |
             $version = node -p "require('./package.json').version"
