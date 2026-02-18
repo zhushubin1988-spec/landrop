@@ -10,14 +10,20 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          
       - name: Install
         run: npm install
+        
       - name: Build
         run: npm run build:win
+        env:                          # <-- 加在这里
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}  # <-- 加这行
+        
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
